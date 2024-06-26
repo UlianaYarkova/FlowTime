@@ -1,42 +1,104 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { Foundation } from '@expo/vector-icons'
 import cn from 'clsx'
 import { AppConstants } from '@/app.constants'
 import { CountdownCircleTimer } from 'react-native-countdown-circle-timer'
+import { EnumStatus } from './timer.inteface'
+
+const flowDuration = 5
+const sessionCount = 7
+const breakDuration = 1 * 60
 
 const Timer: FC = () => {
 	const [isPlaying, setIsPlaying] = useState(false)
+	const [status, setStatus] = useState<EnumStatus>(EnumStatus.REST)
+	const [currentSession, setCurrentSession] = useState(1)
+	const [key, setKey] = useState(0)
+
+	useEffect(() => {
+		if (isPlaying && status === EnumStatus.REST) {
+			setKey(prev => prev + 1)
+		}
+	}, [isPlaying])
+
+	const isAllSessionComplete = currentSession === sessionCount
 
 	return (
 		<View className='justify-center flex-1'>
 			<View className='self-center'>
+				<Text className='text-center text-7xl pt-1.5 mb-10'>
+					{status === EnumStatus.WORK ? '🔥' : '😋'}
+				</Text>
+
 				<CountdownCircleTimer
+					key={key}
 					isPlaying={isPlaying}
-					duration={65}
-					colors={['#003931', '#5CEBD3', '#A5EBDF', '#FFFFFF']}
-					colorsTime={[7, 5, 2, 0]}
+					duration={flowDuration}
+					colors={['#003931', '#5CEBD3', '#A5EBDF']}
+					colorsTime={[flowDuration, 0]}
 					trailColor='#002621'
-					onComplete={() => setIsPlaying(false)}
+					onComplete={() => {
+						setIsPlaying(false)
+						setCurrentSession(prev => prev + 1)
+						setStatus(EnumStatus.REST)
+
+						if (isAllSessionComplete) {
+							setStatus(EnumStatus.COMPLETED)
+						}
+					}}
 					size={320}
 					strokeWidth={10}
+					onUpdate={remainingTime => {
+						if (!!remainingTime) setStatus(EnumStatus.WORK)
+					}}
 				>
 					{({ remainingTime }) => {
 						let minutes = Math.floor(remainingTime / 60)
-						minutes = minutes < 10 ? '0' + minutes : minutes
 						let seconds = remainingTime % 60
+
+						if (status === EnumStatus.REST) {
+							minutes = Math.floor(flowDuration / 60)
+							seconds = flowDuration % 60
+						}
+
+						minutes = minutes < 10 ? '0' + minutes : minutes
 						seconds = seconds < 10 ? '0' + seconds : seconds
 
 						return (
-							<Text className='mt-4 text-white text-7xl font-bold'>{`${minutes}:${seconds}`}</Text>
+							<View className='mt-5'>
+								<Text className='text-white text-6xl font-semibold'>{`${minutes}:${seconds}`}</Text>
+								<Text className='text-center text-2xl text-white mt-0.5'>
+									{status}
+								</Text>
+							</View>
 						)
 					}}
 				</CountdownCircleTimer>
 				<View className='mt-14 flex-row items-center justify-center'>
-					{Array.from(Array(7)).map((_, index) => (
+					{Array.from(Array(sessionCount)).map((_, index) => (
 						<View className='flex-row items-center' key={`point${index}`}>
-							<View className='w-5 h-5 bg-primary rounded-full' />
-							{index + 1 != 7 && <View className='w-7 h-0.5 bg-primary' />}
+							<View
+								className={cn(
+									'w-5 h-5 rounded-full border-[3px] ',
+
+									index + 1 === currentSession
+										? 'border-primary bg-transparent'
+										: 'border-transparent bg-[#2B3B38]',
+									{
+										'bg-primary opacity-75':
+											index + 1 <= currentSession &&
+											index + 1 != currentSession,
+									},
+								)}
+							/>
+							{index + 1 != sessionCount && (
+								<View
+									className={cn('w-7 h-0.5 bg-[#2B3B38]', {
+										'bg-primary opacity-75': index + 2 <= currentSession,
+									})}
+								/>
+							)}
 						</View>
 					))}
 				</View>

@@ -14,7 +14,7 @@ import Button from '@/components/ui/Buttom'
 import Loader from '@/components/ui/Loader'
 
 import AuthFields from './AuthFields'
-// novoe dlya 2 otcheta
+
 const Auth: FC = () => {
 	const [isReg, setIsReg] = useState(false)
 
@@ -26,7 +26,7 @@ const Auth: FC = () => {
 
 	const onSumbit: SubmitHandler<IAuthFormData> = data => {
 		setUser({
-			///предварительное решение без бекенда, так же во 2 отчет
+			///предварительное решение без бкенда
 			_id: '',
 			...data,
 		})
@@ -34,7 +34,7 @@ const Auth: FC = () => {
 	}
 
 	const isLoading = false
-	//скрытие клавиатуры кликом по экрану так же 2 отчет
+
 	return (
 		<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
 			<View className='items-center justify-center flex-1'>
